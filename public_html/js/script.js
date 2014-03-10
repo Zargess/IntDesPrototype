@@ -14,67 +14,106 @@ var timer;
 var showingTop = 52;
 var orgLeft = 0;
 var orgTop = 0;
+var newNumber;
 
 $(document).ready(function() {
     $("#drag .drg").draggable({
         cursor: 'move',
         revert: 'invalid',
         revertDuration: 900,
-        containment: $("#pull-number")
+        containment: $("#pull-number"),
+        stop: function() {
+            var Stoppos = $(this).offset();
+            newNumber = Stoppos.top >= "30";
+        }
     });
-
+    currentNumber = Math.floor(Math.random() * (60 - 10 + 1)) + 10;
     $("#pull-number").droppable({
         accept: ".drg",
         activeClass: '.drg',
         drop: function(event, ui) {
-            $(".panel").slideDown("slow");
-            $(".drg").animate({
-               'top' : showingTop,
-               'left' : orgLeft
-            }, 500);
-            if (custNumber === undefined) {
-                custNumber = 6;
-            }
-            $("#numberShower").text("Dit nummer er: " + custNumber);
-            $(".pull-me").text("");
-            $(".arrowContainer").hide();
-            if (timer === undefined) {
-                beginTimer();
-                undoYourTurn();
+            var Stoppos = $(".drg").offset();
+            newNumber = Stoppos.top >= "70";
+            if (newNumber) {
+                $(".panel").slideDown("slow");
+                $(".drg").animate({
+                    'top': showingTop,
+                    'left': orgLeft
+                }, 500);
+                getCustNumber();
+                $("#numberShower").text("Dit nummer er: " + custNumber);
+                $(".pull-me").text("");
+                $(".arrowContainer").hide();
+                if (timer === undefined) {
+                    beginTimer();
+                }
+                if (custNumber !== undefined) {
+                    undoYourTurn();
+                }
+                newNumber = false;
+            } else {
+                $(".drg").animate({
+                    'top': 0,
+                }, 500);
             }
         }
     });
-    currentNumber = 1;
+    currentNumber = Math.floor(Math.random() * (60 - 10 + 1)) + 10;
     constructNumbers();
     hideAll();
     updateNumbers(currentNumber);
 });
 
 function beginTimer() {
+    //var delay = Math.floor(Math.random() * (12000 - 5000 + 1)) + 5000;
+    var delay = 1000;
     timer = setInterval(function() {
         if (custNumber !== undefined) {
             currentNumber++;
+            if (currentNumber > 99) {
+                currentNumber = 1;
+            }
             updateNumbers(currentNumber);
+            console.log("Delay is: " + delay);
             if (custNumber === currentNumber) {
-                clearInterval(timer);
-                timer = undefined;
-                custNumber = currentNumber + 6;
-                yourTurn();
+                yourTurn(custNumber);
             }
         }
-    }, 1000);
+    }, delay);
 }
 
-function yourTurn() {
+function getCustNumber() {
+    custNumber = currentNumber + Math.floor(Math.random() * (15 - 5 + 1)) + 5;
+    if (custNumber > 99) {
+        var temp = custNumber - 99;
+        custNumber = 0 + temp;
+    }
+}
+
+function yourTurn(no) {
     $(".drg").animate({
         'top': orgTop,
         'left': orgLeft
     }, 500, function() {
         $(".panel").slideUp("slow");
         $("#pull-number").css({background: "green"});
-        $("#messageBox").text("Det er din tur!");
+        var time = function() {
+            return new Date.getTime();
+        };
+        $("#messageBox").text("Det er din tur!\nDit nummer: " + no + "\nTidspunkt: " + getDate());
         $(".pull-me").text("Træk et nyt nummer");
     });
+}
+
+function getDate() {
+    var currentdate = new Date();
+    var datetime = currentdate.getDate() + "/"
+            + (currentdate.getMonth() + 1) + "/"
+            + currentdate.getFullYear() + " @ "
+            + currentdate.getHours() + ":"
+            + currentdate.getMinutes() + ":"
+            + currentdate.getSeconds();
+    return datetime;
 }
 
 function undoYourTurn() {
