@@ -65,8 +65,7 @@ $(document).ready(function() {
 });
 
 function beginTimer() {
-    //var delay = Math.floor(Math.random() * (12000 - 5000 + 1)) + 5000;
-    var delay = 1000;
+    var delay = Math.floor(Math.random() * (9000 - 3000 + 1)) + 3000;
     timer = setInterval(function() {
         if (custNumber !== undefined) {
             currentNumber++;
@@ -74,7 +73,6 @@ function beginTimer() {
                 currentNumber = 1;
             }
             updateNumbers(currentNumber);
-            console.log("Delay is: " + delay);
             if (custNumber === currentNumber) {
                 yourTurn(custNumber);
             }
