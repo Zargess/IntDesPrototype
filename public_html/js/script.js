@@ -81,12 +81,16 @@ function beginTimer() {
             $(".arrowContainer").animate({top: "100px"}, 1500, function() {
                 $(".arrowContainer").hide();
                 $(".arrowContainer").css({top: "0px"});
-                $(".arrowContainer").fadeIn("fast");
+                $("#set1").fadeIn("fast", fadeSet2In);
             });
             counter = 0;
         }
         beginTimer();
     }, delay);
+}
+
+function fadeSet2In() {
+    $("#set2").fadeIn("fast");
 }
 
 function getCustNumber() {
