@@ -14,18 +14,15 @@ var timer;
 var showingTop = 52;
 var orgLeft = 0;
 var orgTop = 0;
-var newNumber;
+var gotNumber;
+var counter = 0;
 
 $(document).ready(function() {
     $("#drag .drg").draggable({
         cursor: 'move',
         revert: 'invalid',
         revertDuration: 900,
-        containment: $("#pull-number"),
-        stop: function() {
-            var Stoppos = $(this).offset();
-            newNumber = Stoppos.top >= "30";
-        }
+        containment: $("#pull-number")
     });
     currentNumber = Math.floor(Math.random() * (60 - 10 + 1)) + 10;
     $("#pull-number").droppable({
@@ -33,27 +30,29 @@ $(document).ready(function() {
         activeClass: '.drg',
         drop: function(event, ui) {
             var Stoppos = $(".drg").offset();
-            newNumber = Stoppos.top >= "70";
+            var newNumber = Stoppos.top >= "70";
             if (newNumber) {
                 $(".panel").slideDown("slow");
                 $(".drg").animate({
-                    'top': showingTop,
-                    'left': orgLeft
+                    top: showingTop,
+                    left: orgLeft
                 }, 500);
                 getCustNumber();
                 $("#numberShower").text("Dit nummer er: " + custNumber);
                 $(".pull-me").text("");
                 $(".arrowContainer").hide();
-                if (timer === undefined) {
-                    beginTimer();
-                }
                 if (custNumber !== undefined) {
                     undoYourTurn();
                 }
-                newNumber = false;
+                gotNumber = true;
+            } else if (!gotNumber) {
+                $(".drg").animate({
+                    top: "0"
+                }, 500);
             } else {
                 $(".drg").animate({
-                    'top': 0,
+                    top: showingTop,
+                    left: orgLeft
                 }, 500);
             }
         }
@@ -62,21 +61,31 @@ $(document).ready(function() {
     constructNumbers();
     hideAll();
     updateNumbers(currentNumber);
+    beginTimer();
 });
 
 function beginTimer() {
     var delay = Math.floor(Math.random() * (9000 - 3000 + 1)) + 3000;
-    timer = setInterval(function() {
+    timer = setTimeout(function() {
+        currentNumber++;
+        counter++;
+        if (currentNumber > 99) {
+            currentNumber = 1;
+        }
+        updateNumbers(currentNumber);
         if (custNumber !== undefined) {
-            currentNumber++;
-            if (currentNumber > 99) {
-                currentNumber = 1;
-            }
-            updateNumbers(currentNumber);
             if (custNumber === currentNumber) {
                 yourTurn(custNumber);
             }
+        } else if (counter === 2) {
+            $(".arrowContainer").animate({top: "100px"}, 1500, function() {
+                $(".arrowContainer").hide();
+                $(".arrowContainer").css({top: "0px"});
+                $(".arrowContainer").fadeIn("fast");
+            });
+            counter = 0;
         }
+        beginTimer();
     }, delay);
 }
 
@@ -95,12 +104,26 @@ function yourTurn(no) {
     }, 500, function() {
         $(".panel").slideUp("slow");
         $("#pull-number").css({background: "green"});
-        var time = function() {
-            return new Date.getTime();
-        };
-        $("#messageBox").text("Det er din tur!\nDit nummer: " + no + "\nTidspunkt: " + getDate());
+        $("#messageBox").html(htmlForTextWithEmbeddedNewlines("Det er din tur!\nDit nummer: " + no + "\nTidspunkt: " + getDate()));
         $(".pull-me").text("Træk et nyt nummer");
     });
+    gotNumber = false;
+    setTimeout(notYourTurn, 9000);
+}
+
+function notYourTurn() {
+    $("#pull-number").css({background: "black"});
+    $("#messageBox").html(htmlForTextWithEmbeddedNewlines("Det er ikke længere din tur. \nDu kan trække et nyt nummer"));
+}
+
+function htmlForTextWithEmbeddedNewlines(text) {
+    var htmls = [];
+    var lines = text.split(/\n/);
+    var tmpDiv = jQuery(document.createElement('div'));
+    for (var i = 0; i < lines.length; i++) {
+        htmls.push(tmpDiv.text(lines[i]).html());
+    }
+    return htmls.join("<br>");
 }
 
 function getDate() {
@@ -121,11 +144,7 @@ function undoYourTurn() {
 
 function constructNumbers() {
     var clock = $('#clock');
-
-    // This object will hold the digit elements
     var digits = {};
-
-    // Positions for the tens and ones
     var positions = [
         'h1', 'h2'
     ];
@@ -133,18 +152,12 @@ function constructNumbers() {
 
     $.each(positions, function() {
         var pos = $('<div>');
-
         for (var i = 1; i < 8; i++) {
             var span = '<span id="' + i + " " + this + '" class="d' + i + '">';
             pos.append(span);
         }
-
-        // Set the digits as key:value pairs in the digits object
         digits[this] = pos;
-
-        // Add the digit elements to the page
         digit_holder.append(pos);
-
     });
 }
 
